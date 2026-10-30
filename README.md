@@ -30,49 +30,33 @@ flowchart TD
 
 ### 1. Pair screening
 
-For each candidate pair $(P_1,P_2)$, the notebook constructs
+For each candidate pair (P₁, P₂), the notebook constructs the log-price spread:
 
-$$
-S_t = \log(P_{1,t})-\log(P_{2,t}).
-$$
+**Sₜ = log(P₁,ₜ) − log(P₂,ₜ)**
 
 It tests the spread for stationarity with ADF and tests the two log-price series for cointegration with Engle–Granger. A pair is retained when both p-values are below 0.05.
 
 ### 2. Bayesian mean-reversion model
 
-The spread dynamics are approximated by
+The spread dynamics are approximated by the discrete-time mean-reversion equation:
 
-$$
-\Delta S_t
-=
-\beta(\mu-S_{t-1})+\varepsilon_t,
-\qquad
-\varepsilon_t\sim\mathcal{N}(0,\sigma^2).
-$$
+**ΔSₜ = β(μ − Sₜ₋₁) + εₜ, εₜ ~ N(0, σ²)**
 
 The model uses the following priors:
 
-$$
-\begin{aligned}
-\beta &\sim \operatorname{Beta}(2,5),\\
-\mu &\sim \mathcal{N}(0,1),\\
-\sigma &\sim \operatorname{HalfNormal}(0.1).
-\end{aligned}
-$$
+- **Mean-reversion speed:** β ~ Beta(2, 5)
+- **Long-run spread level:** μ ~ N(0, 1)
+- **Innovation scale:** σ ~ HalfNormal(0.1)
 
-The half-life is represented as
+The half-life is represented as:
 
-$$
-t_{1/2}
-=
-\frac{\log 2}{\beta+10^{-6}}.
-$$
+**t½ = ln(2) / (β + 10⁻⁶)**
 
-The archived notebook samples four NUTS chains with 1,000 tuning steps and 2,000 posterior draws per chain. ArviZ is used for posterior summaries, $\hat{R}$, effective sample size, trace plots, and posterior predictive checks.
+The archived notebook samples four NUTS chains with 1,000 tuning steps and 2,000 posterior draws per chain. ArviZ is used for posterior summaries, R-hat (R̂), effective sample size (ESS), trace plots, and posterior predictive checks.
 
 ### 3. Trading rules and backtest
 
-The backtest calculates a rolling z-score using a 20-observation window and lagged rolling mean and standard deviation. It enters a long spread when $z<-2$, a short spread when $z>2$, and exits when the z-score returns to zero. The original backtest uses a notional position size of USD 100,000 and closes any position still open at the end of the test sample.
+The backtest calculates a rolling z-score using a 20-observation window and lagged rolling mean and standard deviation. It enters a long spread when z < −2, a short spread when z > 2, and exits when the z-score returns to zero. The original backtest uses a notional position size of USD 100,000 and closes any position still open at the end of the test sample.
 
 ## Archived experiment results
 
@@ -84,9 +68,9 @@ The numbers below are transcribed from the **saved notebook execution**, not gen
 | Selected pair | IVV–VOO |
 | Observations | 877 |
 | Training / test observations | 657 / 220 |
-| Posterior mean of mean-reversion speed $\beta$ | 0.8856 |
-| Posterior mean of long-run level $\mu$ | 0.088906 |
-| Posterior mean of innovation scale $\sigma$ | 0.000262 |
+| Posterior mean of mean-reversion speed (β) | 0.8856 |
+| Posterior mean of long-run level (μ) | 0.088906 |
+| Posterior mean of innovation scale (σ) | 0.000262 |
 | Posterior mean half-life | 0.78 days |
 | Number of test-period trades | 14 |
 | Winning trades / win rate | 9 / 64.29% |
@@ -154,9 +138,9 @@ bayesian-mcmc-pairs-trading/
 │   ├── screening.py       # ADF and Engle–Granger tests
 │   ├── bayesian_ou.py     # PyMC OU model and posterior inference
 │   ├── backtest.py        # Rolling z-score backtest
-│   ├── performance.py    # P&L, Sharpe, drawdown, profit factor
+│   ├── performance.py     # P&L, Sharpe, drawdown, profit factor
 │   ├── plotting.py        # Reusable diagnostic and result plots
-│   └── pipeline.py       # End-to-end orchestration
+│   └── pipeline.py        # End-to-end orchestration
 ├── scripts/
 │   └── run_analysis.py
 ├── results/
@@ -210,7 +194,7 @@ This repository preserves the original notebook workflow for reproducibility. Th
 
 1. **Look-ahead in calibration:** The notebook estimates the OU parameters on the full selected spread and only then creates the 75/25 train-test split. Thus, the MCMC calibration sees observations from the nominal test interval.
 
-2. **OU coefficient used as a leg multiplier:** The posterior mean-reversion parameter $\beta$ is passed to the backtest as the second-leg share multiplier. It is not an independently estimated cointegration hedge ratio.
+2. **OU coefficient used as a leg multiplier:** The posterior mean-reversion parameter (β) is passed to the backtest as the second-leg share multiplier. It is not an independently estimated cointegration hedge ratio.
 
 3. **Simplified execution assumptions:** Commissions, bid-ask spread, market impact, slippage, borrow fees, financing, dividend treatment in live trading, and short-sale constraints are not comprehensively modelled.
 
@@ -219,3 +203,4 @@ This repository preserves the original notebook workflow for reproducibility. Th
 5. **Historical data changes:** Yahoo Finance data can be revised. Re-running the pipeline is not guaranteed to reproduce the saved output figures or metrics exactly.
 
 These points are explicitly documented rather than hidden. A next research iteration should estimate hedge ratios using training data only, fit the OU model on the training interval, freeze all parameters before testing, and include transaction costs and robust walk-forward validation.
+

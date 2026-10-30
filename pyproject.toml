@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bayesian-mcmc-pairs-trading"
+version = "1.0.0"
+description = "Bayesian MCMC calibration and mean-reversion pairs trading research project"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24", "pandas>=2.0", "matplotlib>=3.7", "seaborn>=0.12",
+  "yfinance>=0.2.40", "statsmodels>=0.14", "pymc>=5.10",
+  "arviz>=0.17", "scipy>=1.10"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

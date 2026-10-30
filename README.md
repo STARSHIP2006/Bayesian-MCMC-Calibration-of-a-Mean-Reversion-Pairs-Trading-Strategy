@@ -43,25 +43,32 @@ It tests the spread for stationarity with ADF and tests the two log-price series
 The spread dynamics are approximated by
 
 \[
-\Delta S_t = eta(\mu-S_{t-1})+arepsilon_t,
-\qquad arepsilon_t\sim\mathcal N(0,\sigma^2),
+\Delta S_t
+=
+\beta(\mu-S_{t-1})+\varepsilon_t,
+\qquad
+\varepsilon_t\sim\mathcal{N}(0,\sigma^2).
 \]
 
-with priors
+The model uses the following priors:
 
 \[
-eta\sim\operatorname{Beta}(2,5),\quad
-\mu\sim\mathcal N(0,1),\quad
-\sigma\sim\operatorname{HalfNormal}(0.1).
+\begin{aligned}
+\beta &\sim \operatorname{Beta}(2,5),\\
+\mu &\sim \mathcal{N}(0,1),\\
+\sigma &\sim \operatorname{HalfNormal}(0.1).
+\end{aligned}
 \]
 
 The half-life is represented as
 
 \[
-t_{1/2}=rac{\log 2}{eta+10^{-6}}.
+t_{1/2}
+=
+\frac{\log 2}{\beta+10^{-6}}.
 \]
 
-The archived notebook samples four NUTS chains with 1,000 tuning steps and 2,000 posterior draws per chain. ArviZ is used for posterior summaries, \(\hat R\), effective sample size, trace plots, and posterior predictive checks.
+The archived notebook samples four NUTS chains with 1,000 tuning steps and 2,000 posterior draws per chain. ArviZ is used for posterior summaries, \(\hat{R}\), effective sample size, trace plots, and posterior predictive checks.
 
 ### 3. Trading rules and backtest
 
@@ -77,7 +84,7 @@ The numbers below are transcribed from the **saved notebook execution**, not gen
 | Selected pair | IVV–VOO |
 | Observations | 877 |
 | Training / test observations | 657 / 220 |
-| Posterior mean of mean-reversion speed \(eta\) | 0.8856 |
+| Posterior mean of mean-reversion speed \(\beta\) | 0.8856 |
 | Posterior mean of long-run level \(\mu\) | 0.088906 |
 | Posterior mean of innovation scale \(\sigma\) | 0.000262 |
 | Posterior mean half-life | 0.78 days |
@@ -88,7 +95,7 @@ The numbers below are transcribed from the **saved notebook execution**, not gen
 | Annualised Sharpe ratio | 0.5413 |
 | Maximum drawdown | USD -746.50 |
 
-**Interpretation:** the archived strategy produced positive aggregate P&L and a profit factor above one, but its reported Sharpe ratio was below one. The result is a small historical simulation, not evidence of a robust or deployable trading edge.
+**Interpretation:** The archived strategy produced positive aggregate P&L and a profit factor above one, but its reported Sharpe ratio was below one. The result is a small historical simulation, not evidence of a robust or deployable trading edge.
 
 ## Visual results
 
@@ -147,9 +154,9 @@ bayesian-mcmc-pairs-trading/
 │   ├── screening.py       # ADF and Engle–Granger tests
 │   ├── bayesian_ou.py     # PyMC OU model and posterior inference
 │   ├── backtest.py        # Rolling z-score backtest
-│   ├── performance.py    # P&L, Sharpe, drawdown, profit factor
-│   ├── plotting.py       # Reusable diagnostic and result plots
-│   └── pipeline.py       # End-to-end orchestration
+│   ├── performance.py     # P&L, Sharpe, drawdown, profit factor
+│   ├── plotting.py        # Reusable diagnostic and result plots
+│   └── pipeline.py        # End-to-end orchestration
 ├── scripts/
 │   └── run_analysis.py
 ├── results/
@@ -165,12 +172,16 @@ bayesian-mcmc-pairs-trading/
 Python 3.10 or later is recommended.
 
 ```bash
-git clone https://github.com/<your-username>/bayesian-mcmc-pairs-trading.git
+git clone https://github.com/YOUR_USERNAME/bayesian-mcmc-pairs-trading.git
 cd bayesian-mcmc-pairs-trading
 
 python -m venv .venv
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-# macOS / Linux: source .venv/bin/activate
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+source .venv/bin/activate
 
 python -m pip install --upgrade pip
 pip install -r requirements.txt
@@ -197,20 +208,14 @@ To inspect the original analysis and its saved outputs, open `notebooks/original
 
 This repository preserves the original notebook workflow for reproducibility. The archived experiment has limitations that should be addressed before treating the backtest as an out-of-sample performance estimate:
 
-1. **Look-ahead in calibration:** the notebook estimates the OU parameters on the full selected spread and only then creates the 75/25 train-test split. Thus the MCMC calibration sees observations from the nominal test interval.
-2. **OU coefficient used as a leg multiplier:** the posterior mean-reversion parameter \(eta\) is passed to the backtest as the second-leg share multiplier. It is not an independently estimated cointegration hedge ratio.
-3. **Simplified execution assumptions:** commissions, bid-ask spread, market impact, slippage, borrow fees, financing, dividend treatment in live trading, and short-sale constraints are not comprehensively modelled.
+1. **Look-ahead in calibration:** The notebook estimates the OU parameters on the full selected spread and only then creates the 75/25 train-test split. Thus, the MCMC calibration sees observations from the nominal test interval.
+
+2. **OU coefficient used as a leg multiplier:** The posterior mean-reversion parameter \(\beta\) is passed to the backtest as the second-leg share multiplier. It is not an independently estimated cointegration hedge ratio.
+
+3. **Simplified execution assumptions:** Commissions, bid-ask spread, market impact, slippage, borrow fees, financing, dividend treatment in live trading, and short-sale constraints are not comprehensively modelled.
+
 4. **Screening definition:** ADF is applied to the simple log-price difference, while the Engle–Granger test is applied to the pair. A production workflow should estimate and validate a hedge-ratio-based residual spread.
+
 5. **Historical data changes:** Yahoo Finance data can be revised. Re-running the pipeline is not guaranteed to reproduce the saved output figures or metrics exactly.
 
 These points are explicitly documented rather than hidden. A next research iteration should estimate hedge ratios using training data only, fit the OU model on the training interval, freeze all parameters before testing, and include transaction costs and robust walk-forward validation.
-
-## Disclaimer
-
-This repository is for educational and research purposes only. It is not investment advice, a trading recommendation, or a claim of profitability. Historical simulated results do not guarantee future performance.
-
-## Citation
-
-If you use this repository, please cite it as:
-
-> *Bayesian MCMC Calibration of a Mean-Reversion Pairs Trading Strategy*, research project repository, 2026.
